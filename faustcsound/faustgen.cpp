@@ -37,12 +37,15 @@
 #include "csdl.h"
 #include "faust/dsp/llvm-dsp.h"
 #include "faust/gui/UI.h"
+#include "faust/gui/SoundUI.h"
 #include <string>
 #if defined(MACOSX) || defined(linux) || defined(HAIKU)
 #include <unistd.h>
 #endif
 
 #define MAXARG 40
+
+SoundUI gSoundUI("", -1, nullptr, true);
 
 /**
  * Faust controls class for Csound
@@ -441,6 +444,7 @@ int32_t init_faustdsp(CSOUND *csound, faustdsp *p) {
     return csound->InitError(csound, "%s", Str("Faust instantiation problem\n"));
 
   dsp->buildUserInterface(ctls);
+  dsp->buildUserInterface(&gSoundUI);
   pfdsp = (faustobj **)csound->QueryGlobalVariable(csound, varname);
   if (pfdsp == NULL) {
     csound->CreateGlobalVariable(csound, varname, sizeof(faustobj *));
@@ -728,6 +732,7 @@ int32_t init_faustaudio(CSOUND *csound, faustgen *p) {
     return csound->InitError(csound, "%s", Str("Faust instantiation problem\n"));
 
   dsp->buildUserInterface(ctls);
+  dsp->buildUserInterface(&gSoundUI);
   pfdsp = (faustobj **)csound->QueryGlobalVariable(csound, varname);
   if (pfdsp == NULL) {
     csound->CreateGlobalVariable(csound, varname, sizeof(faustobj *));
@@ -839,6 +844,7 @@ void *init_faustgen_thread(void *pp) {
   }
 
   dsp->buildUserInterface(ctls);
+  dsp->buildUserInterface(&gSoundUI);
 
   pfdsp = (faustobj **)csound->QueryGlobalVariable(csound, varname);
   if (pfdsp == NULL ||  *pfdsp == NULL) {
@@ -864,6 +870,7 @@ void *init_faustgen_thread(void *pp) {
 
   p->engine = dsp;
   dsp->buildUserInterface(ctls);
+  dsp->buildUserInterface(&gSoundUI);
   dsp->init(csound->GetSr(csound));
   if (p->engine->getNumInputs() != p->INCOUNT - 1) {
     int32_t ret;
