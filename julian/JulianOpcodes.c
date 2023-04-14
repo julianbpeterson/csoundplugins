@@ -11,7 +11,7 @@ void Evolve(uint64_t* pState, uint64_t Rule, uint64_t Order)
 	{
 		uint64_t idx = (i+NumBits-1)%NumBits;
 		uint64_t Key = ((State>>idx) | (State <<(NumBits-idx))) & OrderMask;
-		uint64_t Bit = (Rule & (1ul<<Key)) ? 1 : 0;
+		uint64_t Bit = (Rule & (1ull<<Key)) ? 1 : 0;
 		Next |= Bit << i;
 	}
 	*pState = Next;
@@ -22,7 +22,7 @@ void PrintState(uint64_t State)
 	uint64_t NumBits = 64;
 	for(uint64_t i=0; i<NumBits; i++)
 	{
-		char Glyph = (State & (1ul<<i)) != 0 ? '*' : ' ';
+		char Glyph = (State & (1ull<<i)) != 0 ? '*' : ' ';
 		printf("%c", Glyph);
 	}
 	printf("\n");
