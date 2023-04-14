@@ -312,6 +312,8 @@ void *init_faustcompile_thread(void *pp) {
     return NULL;
   }
 
+  factory->classInit(csound->GetSr(csound));
+
   pffactory = (faustobj **)csound->QueryGlobalVariable(csound, varname);
   if (pffactory == NULL) {
     csound->CreateGlobalVariable(csound, varname, sizeof(faustobj *));
@@ -478,7 +480,7 @@ int32_t init_faustdsp(CSOUND *csound, faustdsp *p) {
 
   p->factory = NULL; // this opcode does not own the factory
   p->engine = (llvm_dsp *)fdsp->obj;
-  p->engine->init(csound->GetSr(csound));
+  p->engine->instanceInit(csound->GetSr(csound));
   csound->RegisterDeinitCallback(csound, p, delete_faustdsp);
   *p->ohptr = (MYFLT)fdsp->cnt;
   return OK;
@@ -519,7 +521,7 @@ int32_t init_faustplay(CSOUND *csound, faustplay *p) {
   }
 
   p->engine = (llvm_dsp *)fobj->obj;
-  p->engine->init(csound->GetSr(csound));
+  p->engine->instanceInit(csound->GetSr(csound));
 
   if (p->engine->getNumInputs() != p->INCOUNT - 1) {
     delete p->engine;
@@ -766,7 +768,7 @@ int32_t init_faustaudio(CSOUND *csound, faustgen *p) {
 
   p->factory = NULL; // this opcode does not own the factory
   p->engine = (llvm_dsp *)fdsp->obj;
-  p->engine->init(csound->GetSr(csound));
+  p->engine->instanceInit(csound->GetSr(csound));
 
   if (p->engine->getNumInputs() != p->INCOUNT - 1) {
     delete p->engine;
@@ -835,6 +837,8 @@ void *init_faustgen_thread(void *pp) {
     return NULL;
   }
 
+  p->factory->classInit(csound->GetSr(csound));
+
   dsp = p->factory->createDSPInstance();
   if (dsp == NULL) {
     int32_t ret = csound->InitError(csound, "%s",
@@ -871,7 +875,7 @@ void *init_faustgen_thread(void *pp) {
   p->engine = dsp;
   dsp->buildUserInterface(ctls);
   dsp->buildUserInterface(&gSoundUI);
-  dsp->init(csound->GetSr(csound));
+  dsp->instanceInit(csound->GetSr(csound));
   if (p->engine->getNumInputs() != p->INCOUNT - 1) {
     int32_t ret;
     ret = csound->InitError(csound, "%s", Str("wrong number of input args\n"));
