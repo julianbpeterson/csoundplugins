@@ -2,6 +2,8 @@
 
 include(FindPackageHandleStandardArgs)
 
+set(FAUST_INCLUDE_DIR ${FAUST_INCLUDE_DIR_HINT})
+
 find_path(
   FAUST_INCLUDE_DIR faust/dsp/llvm-dsp.h
   HINTS
@@ -11,10 +13,17 @@ find_path(
   "${FAUST_INCLUDE_DIR_HINT}"
   )
 
-set(FAUST_NAMES ${FAUST_NAMES} libfaust.so libfaust.dylib faust.dll faust libfaust)
-find_library(FAUST_LIBRARY
-  NAMES ${FAUST_NAMES}
-  HINTS "${FAUST_LIB_DIR_HINT}")
+if(MSVC)
+    set(FAUST_LIBRARY ../../../Faust/lib/libfaustwithllvm Ws2_32)
+else()
+    set(FAUST_NAMES ${FAUST_NAMES} libfaust.so libfaust.dylib faust.dll faust libfaust)
+    find_library(FAUST_LIBRARY
+      NAMES ${FAUST_NAMES}
+      HINTS "${FAUST_LIB_DIR_HINT}")
+endif()
+
+
+
 
 
 find_package_handle_standard_args(FAUST FAUST_INCLUDE_DIR FAUST_LIBRARY)
@@ -22,6 +31,10 @@ find_package_handle_standard_args(FAUST FAUST_INCLUDE_DIR FAUST_LIBRARY)
 if(FAUST_FOUND)
     set(FAUST_LIBRARIES ${FAUST_LIBRARY})
     set(FAUST_INCLUDE_DIRS ${FAUST_INCLUDE_DIR})
+
+    if(MSVC)
+        set(FAUST_LIBRARIES ${FAUST_LIBRARIES} SndFile::sndfile)
+    endif()
 
     if("${FAUST_LIBRARY}" MATCHES ".*\\.a")
         # This is a static build of faust, hence

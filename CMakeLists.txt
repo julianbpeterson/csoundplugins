@@ -1,4 +1,26 @@
 cmake_minimum_required(VERSION 2.8.12)
+
+if (USE_VCPKG)
+    # Detect correct triplet based on CMake env
+    if (WIN32)
+        set(VCPKG_TARGET_TRIPLET "x64-windows-csound")
+    elseif(APPLE)
+        set(VCPKG_TARGET_TRIPLET "x64-osx")
+    elseif (UNIX)
+        set(VCPKG_TARGET_TRIPLET "x64-linux")
+    endif()
+
+    set(VCPKG_FEATURE_FLAGS versions)
+    set(X_VCPKG_APPLOCAL_DEPS_INSTALL ON)
+    set(VCPKG_OVERLAY_TRIPLETS ${CMAKE_CURRENT_SOURCE_DIR}/platform/vcpkg/triplets)
+    set(VCPKG_OVERLAY_PORTS ${CMAKE_CURRENT_SOURCE_DIR}/platform/vcpkg/ports)
+    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake)
+    message("${CMAKE_CURRENT_SOURCE_DIR}")
+endif()
+
+message(STATUS "VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
+message(STATUS "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}")
+
 project(Csound-plugins)
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
     set(CMAKE_COMPILER_IS_CLANG 1)
@@ -21,6 +43,31 @@ find_package(CSOUND)
 if(NOT CSOUND_INCLUDE_DIRS)
       message(FATAL_ERROR "Csound header files are required")
 endif()
+
+## HEADER/LIBRARY/OTHER CHECKS ##
+# First, required stuff
+if(MSVC)
+    find_package(SndFile CONFIG REQUIRED)
+else()
+    find_library(LIBSNDFILE_LIBRARY NAMES sndfile libsndfile-1 libsndfile)
+
+    if(NOT LIBSNDFILE_LIBRARY)
+        message(FATAL_ERROR "Csound requires the sndfile library")
+    endif()
+endif()
+
+if(EMSCRIPTEN)
+  include_directories(emscripten/deps/libsndfile-1.0.25/src/)
+endif()
+find_path(SNDFILE_H_PATH sndfile.h)
+if(SNDFILE_H_PATH)
+    include_directories(${SNDFILE_H_PATH})
+else()
+    message(FATAL_ERROR "Could not find sndfile.h")
+endif()
+
+SET(CMAKE_REQUIRED_LIBRARIES ${LIBSNDFILE_LIBRARY})
+SET(CMAKE_REQUIRED_INCLUDES ${SNDFILE_H_PATH})
 
 include(TestBigEndian)
 include(CheckFunctionExists)
@@ -136,8 +183,8 @@ if(USE_DOUBLE)
     elseif(LINUX)
       set(PLUGIN_INSTALL_DIR
       "${LIBRARY_INSTALL_DIR}/csound/plugins64-${APIVERSION}")
-     elseif(WINDOWS)
-      set(PLUGIN_INSTALL_DIR "${env.LOCALAPPDATA}/csound/${APIVERSION}/plugins64")
+     elseif(WIN32)
+      set(PLUGIN_INSTALL_DIR "F://csound/lib/csound/plugins64-${APIVERSION}")
     endif()
 else()
     message(STATUS "Building with 32-bit floats")
@@ -147,8 +194,8 @@ else()
     elseif(LINUX)
       set(PLUGIN_INSTALL_DIR
       "${LIBRARY_INSTALL_DIR}/csound/plugins-${APIVERSION}")
-     elseif(WINDOWS)
-      set(PLUGIN_INSTALL_DIR "${env.LOCALAPPDATA}/csound/${APIVERSION}/plugins")
+     elseif(WIN32)
+      set(PLUGIN_INSTALL_DIR "F://csound/lib/csound/plugins64-${APIVERSION}")
       endif()
 endif()
 
