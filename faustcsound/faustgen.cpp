@@ -312,12 +312,7 @@ void *init_faustcompile_thread(void *pp) {
     return NULL;
   }
 
-  //factory->classInit(csound->GetSr(csound)); // This would be preferred, but there is a bug in faust, so in the meantime:
-  {
-    llvm_dsp* tempdsp = factory->createDSPInstance();
-    tempdsp->init(csound->GetSr(csound));
-    delete tempdsp;
-  }
+  factory->classInit(csound->GetSr(csound));
 
   pffactory = (faustobj **)csound->QueryGlobalVariable(csound, varname);
   if (pffactory == NULL) {
@@ -842,12 +837,7 @@ void *init_faustgen_thread(void *pp) {
     return NULL;
   }
 
-  //p->factory->classInit(csound->GetSr(csound)); // This would be preferred, but there is a bug in faust, so in the meantime:
-  {
-    llvm_dsp* tempdsp = p->factory->createDSPInstance();
-    tempdsp->init(csound->GetSr(csound));
-    delete tempdsp;
-  }
+  p->factory->classInit(csound->GetSr(csound));
 
   dsp = p->factory->createDSPInstance();
   if (dsp == NULL) {
